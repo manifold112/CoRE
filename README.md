@@ -8,7 +8,6 @@ Large Audio-Language Models (LALMs) often exhibit **modality bias** in multiple-
 
 Under a unified option-level scoring protocol, CoRE consistently improves strong LALM backbones such as **Qwen2-Audio** and **Kimi-Audio** on **DCASE 2025 Task 5** and **AIR-Bench SoundQA**.
 
-**Anonymous project page:** https://anonymous.4open.science/r/CoRE-000E
 
 ---
 
@@ -55,76 +54,7 @@ This design disrupts **long-range temporal semantics** while preserving **short-
 
 ---
 
-## Formulation
 
-Let the model output option-level logits for the original audio:
-
-\[
-z^{+} = z(a, q, X), \qquad p^{+} = \text{softmax}(z^{+})
-\]
-
-where \(a\) is the input audio, \(q\) is the question, and \(X\) is the set of candidate options.
-
-### Counterfactual audio
-
-We construct a counterfactual audio \(a_{\text{neg}}\) by:
-
-- splitting the waveform into fixed-length blocks,
-- randomly permuting the block order,
-- applying random within-block time reversal.
-
-The model then produces:
-
-\[
-z^{-} = z(a_{\text{neg}}, q, X), \qquad p^{-} = \text{softmax}(z^{-})
-\]
-
-### Evidence gain
-
-The option-level evidence gain is defined as:
-
-\[
-\Delta = z^{+} - z^{-}
-\]
-
-Intuitively, if an option is truly supported by the original audio, it should receive a stronger score under the real audio than under the counterfactual condition.
-
-### Adaptive evidence-aware gate
-
-To avoid over-correction, CoRE introduces a gate coefficient \(\beta \in [0,1]\), computed from two signals:
-
-- **distributional conflict** between \(p^{+}\) and \(p^{-}\),
-- **confidence gain** under real audio.
-
-Specifically,
-
-\[
-J = \mathrm{JSD}_2(p^{+} \parallel p^{-}), \qquad u_J = 2^J - 1
-\]
-
-\[
-\Delta H^{+} = \max(0, H(p^{-}) - H(p^{+}))
-\]
-
-\[
-u_H = \frac{\Delta H^{+}}{\log_2 K + \epsilon}
-\]
-
-\[
-\beta = \sqrt{u_J u_H}
-\]
-
-### Final re-scoring
-
-The final fused logits are:
-
-\[
-Z = (1-\beta) z^{-} + \beta z^{+}
-\]
-
-The predicted answer is the option with the highest value in \(Z\).
-
----
 
 ## Counterfactual Audio Construction
 
@@ -219,12 +149,4 @@ Its main advantages are:
 
 This avoids unstable or noisy updates in low-conflict settings.
 
----
 
-## Installation
-
-### Clone the repository
-
-```bash
-git clone https://anonymous.4open.science/r/CoRE-000E
-cd CoRE-000E
